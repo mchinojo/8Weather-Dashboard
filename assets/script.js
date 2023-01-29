@@ -2,20 +2,11 @@
 let searchInput = document.getElementById("search-input");
 let todaySection = document.getElementById("today");
 let forecastSection = document.getElementById("forecast");
-let today = moment();
 
-
-function fetchCity(cityName) {
-    let APIKey = "4a57a390d1ee8b328124d4af372fdaec";
-    let queryURL = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&units=metric&appid=${APIKey}`;
-
-    fetch(queryURL)
-        .then(function (response) { return response.json(); })
-        .then(function (cityData) {
-
-            function renderCity() {
-                todaySection.innerHTML =
-                    `<div class=city-date-icon style="
+function renderCity(cityData) {
+    let today = moment();
+    todaySection.innerHTML =
+        `<div class=city-date-icon style="
                     display: flex;
                     align-items: center;">
                     <h2 id="city-name-date"> ${cityData.name} ${today.format("(DD/MM/YYYY)")} </h2>
@@ -26,40 +17,35 @@ function fetchCity(cityName) {
                     <p id="wind"> Wind speed: ${cityData.wind.speed} m/s </p>
                     <p id="humidity"> Humidity: ${cityData.main.humidity}% </p>
                     </div>`;
-            }
-            renderCity();
-            fetchForecast(cityData);
-
-        });
 }
 
-function fetchForecast(cityData) {
+function fetchCity(cityName) {
     let APIKey = "4a57a390d1ee8b328124d4af372fdaec";
-    let queryURL = `https://api.openweathermap.org/data/2.5/forecast?q=${cityData.name}&units=metric&appid=${APIKey}`;
-
-
+    let queryURL = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&units=metric&appid=${APIKey}`;
 
     fetch(queryURL)
         .then(function (response) { return response.json(); })
-        .then(function (forecastData) {
+        .then(function (cityData) {
 
-            function renderForecast() {
-                forecastSection.innerHTML =
-                    `<h5> 5-Day Forecast: </h5>`;
-
-                // for (let index = 0; index < 5; index++) {
-                //     let forecastTemp = forecastData.list[index].main.temp;
-                //     let forecastWind = forecastData.list[index].wind.speed;
-                //     console.log(forecastTemp);
-                // }
-
-                organizeDays(forecastData);
-                // console.log(forecastData);
-            }
-            renderForecast();
+            renderCity(cityData);
+            fetchForecast(cityData);
         });
 }
 
+function getMaxTemp(day, fiveDaysData) {
+    let maxTemp = -1000;
+    let objWithMaxTemp = {};
+
+    for (let index = 0; index < fiveDaysData[day].length; index++) {
+
+        if (fiveDaysData[day][index].temp > maxTemp) {
+            maxTemp = fiveDaysData[day][index].temp;
+            objWithMaxTemp = fiveDaysData[day][index];
+
+        }
+    }
+    return objWithMaxTemp;
+}
 
 document.getElementById("search-button").addEventListener("click", function (event) {
     let cityName = searchInput.value;
@@ -68,42 +54,87 @@ document.getElementById("search-button").addEventListener("click", function (eve
     fetchCity(cityName);
 });
 
+function renderForecast(forecastData) {
+    let fiveDaysData = {};
+    let fiveDaysMaxTemp = [];
+    let today = moment();
+    forecastSection.innerHTML = "";
 
-function organizeDays(forecastData) {
-    let fiveDaysTemperatures = {};
+    createObjectFiveDaysData(forecastData, fiveDaysData);
+    let forecastHeader = document.createElement("h4");
+    forecastHeader.textContent = "5-Day Forecast:";
+    forecastSection.appendChild(forecastHeader);
+    let forecastDiv = document.createElement("div");
+    forecastDiv.classList.add("d-flex", "justify-content-between");
+    forecastSection.appendChild(forecastDiv);
+
+    for (let index = 0; index < Object.keys(fiveDaysData).length; index++) {
+        let day = Object.keys(fiveDaysData)[index];
+
+        fiveDaysMaxTemp.push(getMaxTemp(day, fiveDaysData));
+
+    }
+
+    for (let index = 0; index < fiveDaysMaxTemp.length; index++) {
+
+        let cardDiv = document.createElement("div");
+        cardDiv.classList.add("card-body", "col-lg-2", "mx-2", "my-2");
+        forecastDiv.appendChild(cardDiv);
+        let dateHeader = document.createElement("h5");
+        dateHeader.textContent = today.add(1, 'days').format("DD/MM/YYYY");
+        // let imgWeather = document.createElement("img");
+        // imgWeather.setAttribute("src", )
+        cardDiv.appendChild(dateHeader);
+
+        displayValues(`Temp: ${fiveDaysMaxTemp[index].temp} ºC`, cardDiv);
+        displayValues(`Wind: ${fiveDaysMaxTemp[index].wind} m/s`, cardDiv);
+        displayValues(`Humidity: ${fiveDaysMaxTemp[index].humidity} %`, cardDiv);
+    }
+
+}
+
+function fetchForecast(cityData) {
+    let APIKey = "4a57a390d1ee8b328124d4af372fdaec";
+    let queryURL = `https://api.openweathermap.org/data/2.5/forecast?q=${cityData.name}&units=metric&appid=${APIKey}`;
+
+    fetch(queryURL)
+        .then(function (response) { return response.json(); })
+        .then(function (forecastData) {
+
+            renderForecast(forecastData);
+        });
+}
+
+function displayValues(maxValue, cardDiv) {
+
+    let valueText = document.createElement("p");
+    valueText.textContent = maxValue;
+    cardDiv.appendChild(valueText);
+
+}
+
+function createObjectFiveDaysData(forecastData, fiveDaysData) {
+    let today = moment();
 
     for (let index = 0; index < forecastData.list.length; index++) {
         let days = forecastData.list[index].dt_txt;
         let formattedDays = moment(days).format("DD/MM/YYYY");
         let temperature = forecastData.list[index].main.temp;
+        let wind = forecastData.list[index].wind.speed;
+        let humidity = forecastData.list[index].main.humidity;
+        let icon = forecastData.list[index].weather[0].icon;
 
-        if (fiveDaysTemperatures[formattedDays] === undefined) {
-            fiveDaysTemperatures[formattedDays] = [temperature];
+        if (formattedDays === today.format("DD/MM/YYYY")) {
+            continue;
+        }
+
+        if (fiveDaysData[formattedDays] === undefined) {
+            fiveDaysData[formattedDays] = [];
         } else {
-            fiveDaysTemperatures[formattedDays].push(temperature);
+            fiveDaysData[formattedDays].push({ "temp": temperature, "wind": wind, "humidity": humidity, "icon": icon });
         }
     }
 
-
-
-    function getMaxTemp(day) {
-
-        let maxTemp = fiveDaysTemperatures[day][0];
-        for (let index = 0; index < fiveDaysTemperatures[day].length; index++) {
-
-            if (fiveDaysTemperatures[day][index] > maxTemp) {
-                maxTemp = fiveDaysTemperatures[day][index];
-            }
-        }
-
-        console.log(maxTemp);
-    }
-
-    for (let index = 0; index < Object.keys(fiveDaysTemperatures).length; index++) {
-        let day = Object.keys(fiveDaysTemperatures)[index];
-        getMaxTemp(day);
-
-    }
 
 }
 
