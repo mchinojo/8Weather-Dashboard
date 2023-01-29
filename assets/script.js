@@ -5,6 +5,7 @@ let forecastSection = document.getElementById("forecast");
 
 function renderCity(cityData) {
     let today = moment();
+    todaySection.classList.add("border", "border-dark");
     todaySection.innerHTML =
         `<div class=city-date-icon style="
                     display: flex;
@@ -17,6 +18,25 @@ function renderCity(cityData) {
                     <p id="wind"> Wind speed: ${cityData.wind.speed} m/s </p>
                     <p id="humidity"> Humidity: ${cityData.main.humidity}% </p>
                     </div>`;
+}
+
+function renderLastSearchButtons(event, cityName) {
+    event.preventDefault();
+
+    // let cityName = searchInput.value;
+
+    if (!cityName) {
+        alert("Please write a city");
+        return;
+    }
+
+    let lastSearchList = document.createElement("ul");
+    document.querySelector(".list-group").appendChild(lastSearchList);
+    let cityButton = document.createElement("button");
+    cityButton.setAttribute("type", "submit");
+    cityButton.innerText = cityName;
+    lastSearchList.appendChild(cityButton);
+
 }
 
 function fetchCity(cityName) {
@@ -52,6 +72,9 @@ document.getElementById("search-button").addEventListener("click", function (eve
     event.preventDefault();
 
     fetchCity(cityName);
+    renderLastSearchButtons(event, cityName);
+
+    searchInput.value = "";
 });
 
 function renderForecast(forecastData) {
@@ -82,13 +105,17 @@ function renderForecast(forecastData) {
         forecastDiv.appendChild(cardDiv);
         let dateHeader = document.createElement("h5");
         dateHeader.textContent = today.add(1, 'days').format("DD/MM/YYYY");
-        // let imgWeather = document.createElement("img");
-        // imgWeather.setAttribute("src", )
         cardDiv.appendChild(dateHeader);
+
+        let imgWeather = document.createElement("img");
+        imgWeather.src = `http://openweathermap.org/img/wn/${fiveDaysMaxTemp[index].icon}@2x.png`;
+        imgWeather.setAttribute("style", "height:60px");
+        cardDiv.appendChild(imgWeather);
 
         displayValues(`Temp: ${fiveDaysMaxTemp[index].temp} ºC`, cardDiv);
         displayValues(`Wind: ${fiveDaysMaxTemp[index].wind} m/s`, cardDiv);
         displayValues(`Humidity: ${fiveDaysMaxTemp[index].humidity} %`, cardDiv);
+
     }
 
 }
