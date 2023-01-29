@@ -2,6 +2,7 @@
 let searchInput = document.getElementById("search-input");
 let todaySection = document.getElementById("today");
 let forecastSection = document.getElementById("forecast");
+let searchedCitiesArray = [];
 
 function renderCity(cityData) {
     let today = moment();
@@ -20,26 +21,42 @@ function renderCity(cityData) {
                     </div>`;
 }
 
-function renderLastSearchButtons(event, cityName) {
-    event.preventDefault();
-
-    // let cityName = searchInput.value;
+function renderLastSearchButtons(cityName) {
 
     if (!cityName) {
         alert("Please write a city");
         return;
     }
 
-    let lastSearchList = document.createElement("ul");
-    document.querySelector(".list-group").appendChild(lastSearchList);
-    let cityButton = document.createElement("button");
-    cityButton.setAttribute("type", "submit");
-    cityButton.innerText = cityName;
-    lastSearchList.appendChild(cityButton);
+    searchedCitiesArray.push(cityName);
+    if (searchedCitiesArray.length > 6) {
+        searchedCitiesArray.shift();
+    }
+
+    document.querySelector(".list-group").innerHTML = "";
+    for (let index = 0; index < searchedCitiesArray.length; index++) {
+        let searchedCity = searchedCitiesArray[index];
+        searchedCity = searchedCity.charAt(0).toUpperCase() + searchedCity.slice(1);
+        let cityButton = document.createElement("button");
+        cityButton.setAttribute("type", "submit");
+        cityButton.classList.add("city-button", "btn", "btn-primary", "btn-block");
+        cityButton.innerText = searchedCity;
+        document.querySelector(".list-group").prepend(cityButton);
+    }
+
 
 }
 
-function fetchCity(cityName) {
+document.querySelector(".list-group").addEventListener("click", function (event) {
+    if (event.target.matches("button")) {
+
+        fetchCity(event.target.textContent, false);
+
+    }
+
+});
+
+function fetchCity(cityName, renderButton) {
     let APIKey = "4a57a390d1ee8b328124d4af372fdaec";
     let queryURL = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&units=metric&appid=${APIKey}`;
 
@@ -47,8 +64,19 @@ function fetchCity(cityName) {
         .then(function (response) { return response.json(); })
         .then(function (cityData) {
 
-            renderCity(cityData);
-            fetchForecast(cityData);
+            if (cityData.cod === 200) {
+
+                renderCity(cityData);
+                fetchForecast(cityData);
+                if (renderButton) {
+
+                    renderLastSearchButtons(cityName);
+                }
+
+
+            } else {
+                alert("Something went wrong, please try again.")
+            }
         });
 }
 
@@ -71,8 +99,7 @@ document.getElementById("search-button").addEventListener("click", function (eve
     let cityName = searchInput.value;
     event.preventDefault();
 
-    fetchCity(cityName);
-    renderLastSearchButtons(event, cityName);
+    fetchCity(cityName, true);
 
     searchInput.value = "";
 });
