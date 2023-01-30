@@ -2,16 +2,17 @@
 let searchInput = document.getElementById("search-input");
 let todaySection = document.getElementById("today");
 let forecastSection = document.getElementById("forecast");
-let searchedCitiesArray = [];
+let searchedCitiesArray = JSON.parse(localStorage.getItem('searched-cities')) || [];
+
 
 function renderCity(cityData) {
     let today = moment();
     todaySection.classList.add("border", "border-dark");
     todaySection.innerHTML =
         `<div class=city-date-icon style="
-                    display: flex;
-                    align-items: center;">
-                    <h2 id="city-name-date"> ${cityData.name} ${today.format("(DD/MM/YYYY)")} </h2>
+    display: flex;
+    align-items: center;">
+    <h2 id="city-name-date"> ${cityData.name} ${today.format("(DD/MM/YYYY)")} </h2>
                     <img id="city-icon" src="http://openweathermap.org/img/wn/${cityData.weather[0].icon}@2x.png" height="60px">
                     </div>
                     <div class=city-data-today>
@@ -21,7 +22,7 @@ function renderCity(cityData) {
                     </div>`;
 }
 
-function renderLastSearchButtons(cityName) {
+function updateCitiesArray(cityName) {
 
     if (!cityName) {
         alert("Please write a city");
@@ -32,6 +33,11 @@ function renderLastSearchButtons(cityName) {
     if (searchedCitiesArray.length > 6) {
         searchedCitiesArray.shift();
     }
+    localStorage.setItem('searched-cities', JSON.stringify(searchedCitiesArray));
+}
+
+function renderLastSearchButtons() {
+
 
     document.querySelector(".list-group").innerHTML = "";
     for (let index = 0; index < searchedCitiesArray.length; index++) {
@@ -47,15 +53,6 @@ function renderLastSearchButtons(cityName) {
 
 }
 
-document.querySelector(".list-group").addEventListener("click", function (event) {
-    if (event.target.matches("button")) {
-
-        fetchCity(event.target.textContent, false);
-
-    }
-
-});
-
 function fetchCity(cityName, renderButton) {
     let APIKey = "4a57a390d1ee8b328124d4af372fdaec";
     let queryURL = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&units=metric&appid=${APIKey}`;
@@ -70,12 +67,13 @@ function fetchCity(cityName, renderButton) {
                 fetchForecast(cityData);
                 if (renderButton) {
 
-                    renderLastSearchButtons(cityName);
+                    updateCitiesArray(cityName)
+                    renderLastSearchButtons();
                 }
 
 
             } else {
-                alert("Something went wrong, please try again.")
+                alert("Something went wrong, please try again.");
             }
         });
 }
@@ -95,15 +93,6 @@ function getMaxTemp(day, fiveDaysData) {
     return objWithMaxTemp;
 }
 
-document.getElementById("search-button").addEventListener("click", function (event) {
-    let cityName = searchInput.value;
-    event.preventDefault();
-
-    fetchCity(cityName, true);
-
-    searchInput.value = "";
-});
-
 function renderForecast(forecastData) {
     let fiveDaysData = {};
     let fiveDaysMaxTemp = [];
@@ -111,11 +100,13 @@ function renderForecast(forecastData) {
     forecastSection.innerHTML = "";
 
     createObjectFiveDaysData(forecastData, fiveDaysData);
-    let forecastHeader = document.createElement("h4");
-    forecastHeader.textContent = "5-Day Forecast:";
+    let forecastHeader = document.createElement("div");
+    forecastHeader.innerHTML =
+        `<div id="forecast-header">
+    <h4> 5-Day Forecast </h4> </div>`;
     forecastSection.appendChild(forecastHeader);
     let forecastDiv = document.createElement("div");
-    forecastDiv.classList.add("d-flex", "justify-content-between");
+    forecastDiv.classList.add("row", "justify-content-between");
     forecastSection.appendChild(forecastDiv);
 
     for (let index = 0; index < Object.keys(fiveDaysData).length; index++) {
@@ -188,8 +179,26 @@ function createObjectFiveDaysData(forecastData, fiveDaysData) {
             fiveDaysData[formattedDays].push({ "temp": temperature, "wind": wind, "humidity": humidity, "icon": icon });
         }
     }
-
-
 }
+
+renderLastSearchButtons();
+
+document.getElementById("search-button").addEventListener("click", function (event) {
+    let cityName = searchInput.value;
+    event.preventDefault();
+
+    fetchCity(cityName, true);
+
+    searchInput.value = "";
+});
+
+document.querySelector(".list-group").addEventListener("click", function (event) {
+    if (event.target.matches("button")) {
+
+        fetchCity(event.target.textContent, false);
+
+    }
+
+});
 
 
