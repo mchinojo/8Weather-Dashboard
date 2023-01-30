@@ -1,0 +1,17 @@
+body {
+    background-color: rgb(179, 188, 243);
+    font-family: 'Sora', sans-serif;
+    color: black;
+}
+
+.weather-header {
+    border-bottom-width: 1px;
+    border-bottom-color: black;
+}
+
+.weather-header h1 {
+    font-family: 'Sora', sans-serif;
+    color: rgb(217, 101, 95);
+    font-weight: 700;
+
+}

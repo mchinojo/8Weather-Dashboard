@@ -81,7 +81,7 @@ function renderForecast(forecastData) {
     forecastSection.appendChild(forecastHeader);
 
     let forecastDiv = document.createElement("div");
-    forecastDiv.classList.add("row", "justify-content-between");
+    forecastDiv.classList.add("row", "justify-content-around");
     forecastSection.appendChild(forecastDiv);
 
     // A loop to push the data I need on my new object.
@@ -93,7 +93,7 @@ function renderForecast(forecastData) {
     // A loop to create 5 cards with the weather data of the next 5 days.
     for (let index = 0; index < fiveDaysMaxTemp.length; index++) {
         let cardDiv = document.createElement("div");
-        cardDiv.classList.add("card-body", "col-lg-2", "mx-2", "my-2");
+        cardDiv.classList.add("card-body", "border", "border-dark", "col-lg-2", "mx-2", "my-2");
         forecastDiv.appendChild(cardDiv);
 
         let dateHeader = document.createElement("h5");
@@ -185,7 +185,7 @@ function renderLastSearchButtons() {
         searchedCity = searchedCity.charAt(0).toUpperCase() + searchedCity.slice(1);
         let cityButton = document.createElement("button");
         cityButton.setAttribute("type", "submit");
-        cityButton.classList.add("city-button", "btn", "btn-primary", "btn-block");
+        cityButton.classList.add("city-button", "btn", "btn-outline-dark", "btn-block", "rounded-0", "mb-3");
         cityButton.innerText = searchedCity;
         document.querySelector(".list-group").prepend(cityButton);
     }
