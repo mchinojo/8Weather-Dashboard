@@ -24,7 +24,7 @@ I was given initial HTML, so I will be working mostly on the Javascript code. Th
 
   I am using the [Moment.js](https://momentjs.com/) library to work with date and time. Also this app is powered by [Bootstrap](https://getbootstrap.com/docs/4.3/getting-started/introduction/).
 
-Here is a link to the deployed application: https://github.com/mchinojo/8Weather-Dashboard
+Here is a link to the deployed application: https://mchinojo.github.io/8Weather-Dashboard/
 
 ## Usage
 
